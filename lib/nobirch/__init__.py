@@ -1,11 +1,8 @@
-#!!!! this will be $BIRCH/java/jython
 import os
 import sys
 import fileinput
 
-from Globals import CONSOLE
-from Globals import ARGS
-from Globals import print_console
+from log import *
 
 
 '''
@@ -16,6 +13,7 @@ Created on 2010-11-08
 
 FILE_LIST=[".login", ".tcshrc",  ".cshrc", ".profile", ".bash_profile", ".bash_login", ".bashrc", ".zshenv"]
 BIRCH_DIR=os.getenv('BIRCH')
+
 def remove_birch(filename):
     if os.path.lexists(filename):
 	    for line in fileinput.input(filename, inplace=1):
@@ -55,10 +53,10 @@ def run_uninstall(directory=None,quiet=False):
     for file in FILE_LIST:
         remove_birch(os.getenv('HOME')+"/"+file)
 
-    print_console("Done!")
-    print_console("Logout and login again so that the changes can take effect.")
-    print_console("If you wish to restore BIRCH access, type")
-    print_console(directory+"/admin/newuser")
+    info("Done!")
+    info("Logout and login again so that the changes can take effect.")
+    info("If you wish to restore BIRCH access, type")
+    info(directory+"/admin/newuser")
 
 
 

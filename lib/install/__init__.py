@@ -2,31 +2,22 @@
 import getpass
 import os
 from shutil import move
-from subprocess import Popen
-from subprocess import PIPE
 
 #lib includes
 import commonlib
 from commonlib import stream_exec 
-from commonlib import print_label 
-
 
 #install includes
 import nobirch
 import birchhome
-from commonlib import *
-#from util import quote_dos_path
-#from cygcfg import cygwin_exec
-#from cygcfg import *
+
+from log import *
 
 
+def install(args):
 
-
-def main_install():
-
-	print_label('Starting the intall process')	
-	print_console("The current version of BIRCH is "+ARGS.NEWEST_VERSION)
-	print_console("Using: "+ARGS.install_dir+" as installation directory")
+	label('Starting the intall process')	
+	info("Using: "+args.installDir+" as installation directory")
     
 
 	if "winxp-32" in ARGS.platform:
@@ -58,185 +49,139 @@ def main_install():
 		
 	else:
 		
-		extract_tarballs()
-	
-		print_console("Archives extracted.")
-		run_nobirch()
-		if (not ARGS.is_update):
-			move_local()	
-			makeProperties(ARGS.install_dir)
-
-		run_birchhome(ARGS.install_dir+"/",ARGS.install_dir+"/")
-		set_platform()	#simply calling existing setplatform
-		makeParamFile(ARGS.install_dir) #see if this can be omitted, its a total hack
-		run_customdoc(stream_exec,"java -jar "+ARGS.jython_path,ARGS.install_dir)
-		run_htmldoc(stream_exec,"java -jar "+ARGS.jython_path,ARGS.install_dir)	
-		run_newuser()
+		run_nobirch(args)
+        move_local(args)	
+        makeProperties(args)
+		run_birchhome(args.installDir+"/",args.installDir+"/")
+		set_platform(args)	#simply calling existing setplatform
+		makeParamFile(args) #see if this can be omitted, its a total hack
+		run_customdoc(args)
+		run_htmldoc(args)	
+		run_newuser(args)
 	
 		
-	verify_install()
+	verify_install(args)
 		
 		
 
 
 
 
-def run_nobirch():
+def run_nobirch(args):
 
-	print_label("Nobirch")
-	print_console("Running nobirch")
-	os.chdir(ARGS.install_dir+"/admin")
+	label("Nobirch")
+	info("Running nobirch")
+	os.chdir(os.path.join(args.installDir,"admin"))
 	
-	nobirch.run_uninstall(directory=ARGS.install_dir,quiet=True)
+	nobirch.run_uninstall(directory=args.installDir,quiet=True)
 
-def move_local():
-	print_console("Moving local-generic to local")
+def move_local(args):
+	info("Moving local-generic to local")
 	cwd= os.getcwd()
 	
-	os.chdir(ARGS.install_dir)
+	os.chdir(args.installDir)
 	move("local-generic","local")	
 
 	os.chdir(cwd)
 
 
-def update_local():
-	print_label("Update started")
-	print_console("Updating birch local")
-	stream_exec(ARGS.install_dir+"/install-birch/update-local.sh")
 
 
-def run_birchhome(install_dir,homepath):
+def run_birchhome(args):
 	
-	print_label("Birchhome")
-	print_console("Running birchhome")
-#	birchhome.main(install_dir,homepath)# need to update this once default install is using BIRCHDEV
-	stream_exec(ARGS.install_dir+"/install-birch/birchhome.sh",ARGS.install_dir+"/install-birch")
+	label("Birchhome")
+	info("Running birchhome")
+#	birchhome.main(install_dir,homepath)
+	stream_exec(args.installDir+"/install-birch/birchhome.sh",args.installDir+"/install-birch")
 	
-def set_platform(exec_func=stream_exec,install_dir=ARGS.install_dir):
-	print_label("Setplatform")
-	print_console("Setting birch platform to "+ARGS.platform)
-	if (install_dir==None):
-		print_console("install dir is none!")
-		install_dir=ARGS.install_dir
-	print_console("Using install dir: "+install_dir)
-	
-	exec_func(install_dir+"/install-birch/setplatform.sh "+ARGS.platform,install_dir+"/install-birch")
-	#need to run setplatform
+def set_platform(args):
+	label("Setplatform")
+	info("Setting birch platform to "+args.platform)
+	stream_exec(args.installDir+"/install-birch/setplatform.sh"+.platform,args.installDir+"/install-birch")
 		
 		
-def run_customdoc(exec_func,exec_shell_prefix,install_dir):
-	print_label("Customdoc")
+def run_customdoc(args):
+	label("Customdoc")
 
-	print_console("Running customdoc.py")
-	#fails, need to give it the params correctly
+	info("Running customdoc.py")
 	
-	"""
-	The solution is probably to fix the module directly
 	
-	getbirch.py: Running customdoc.py
-	aceback (most recent call last):
-	File "/home/umhameld/BIRCH/script/customdoc.py", line 135, in <module>
-	  DIRFN = sys.argv[3]
-	dexError: index out of range: 3
-	tbirch.py: Running htmldoc.py
-		"""
+#	customdoc=exec_shell_prefix+" "+install_dir+"/script/customdoc.py "+install_dir+"/install-birch/oldstr.param "+install_dir+"/local/admin/newstr.param "+install_dir+"/install-birch/htmldir.param"
 	
-	if(exec_func==None):
-		exec_func=stream_exec	
-	
-	if exec_shell_prefix ==None:
-		print_console("No shell specified to run customdoc.")
-		raise Exception
-	
-	customdoc=exec_shell_prefix+" "+install_dir+"/script/customdoc.py "+install_dir+"/install-birch/oldstr.param "+install_dir+"/local/admin/newstr.param "+install_dir+"/install-birch/htmldir.param"
-	print_console(ARGS.jython_path)
-	
-	exec_func(customdoc)
+#	exec_func(customdoc)
 
 
 
-def run_htmldoc(exec_func,exec_shell_prefix,install_dir):
-	print_label("Htmldoc")
-	print_console("Running htmldoc.py")
+def run_htmldoc(args):
+    label("Htmldoc")
+	info("Running htmldoc")
 	
-	if(exec_func==None):
-		exec_func=stream_exec	
+#	htmldoc=exec_shell_prefix+" "+install_dir+"/script/htmldoc.py "+install_dir+" "+ARGS.platform
 	
-	if exec_shell_prefix ==None:
-		print_console("No shell specified to run customdoc.")
-		raise Exception
-	htmldoc=exec_shell_prefix+" "+install_dir+"/script/htmldoc.py "+install_dir+" "+ARGS.platform
-	
-	print_console(ARGS.jython_path)
-	
-	exec_func(htmldoc)
+#	exec_func(htmldoc)
 
 
 
-def run_newuser():
-	print_label("Newuser")
-	print_console("Running newuser")
+def run_newuser(args):
+	label("Newuser")
+	info("Running newuser")
 	
-	stream_exec("./newuser",ARGS.install_dir+"/admin")
+	stream_exec("./newuser",args.installDir+"/admin")
 
 
-def makeParamFile(install_dir):
-	print_console("Making paramfile for customdoc")
-	paramfile= open(ARGS.install_dir+"/local/admin/newstr.param","w")
+def makeParamFile(args):
+	info("Making paramfile for customdoc")
+	paramfile= open( os.path.join(args.installDir,"/local/admin/newstr.param"),"w")
 
 	paramfile.write("~\n")
-	paramfile.write("file://"+install_dir+"/public_html\n")
-	paramfile.write("file://"+install_dir+"\n")
-	paramfile.write(ARGS.admin_email+"\n")
-	paramfile.write(install_dir+"\n")
+	paramfile.write("file://"+args.installDir+"/public_html\n")
+	paramfile.write("file://"+args.installDir+"\n")
+	paramfile.write(args.admin_email+"\n")
+	paramfile.write(args.installDir+"\n")
 	paramfile.write(getpass.getuser()+"\n")
 	paramfile.flush()
 	paramfile.close()
 
 
-def makeProperties(install_dir):
+def makeProperties(args):
 	print_console("Writing BIRCH.properties for legacy script support")
-	props = open(ARGS.install_dir+"/local/admin/BIRCH.properties","w")
-	props.write("BirchProps.homedir="+install_dir+"\n")
-
+	props = open( os.path.join(args.installDir,"/local/admin/BIRCH.properties"),"w")
+	props.write("BirchProps.homedir="+args.installDir+"\n")
 	props.write("BirchProps.adminUserid="+getpass.getuser()+"\n")	
-	props.write("BirchProps.birchURL=file://"+install_dir+"/public_html\n")	
-	props.write("BirchProps.adminEmail="+ARGS.admin_email+"\n")	
-	props.write("BirchProps.platform="+ARGS.platform+"\n")	
-#BirchProps.BirchMasterCopy
-	props.write("BirchProps.birchHomeURL=file://"+install_dir+"\n")	
-	if ARGS.is_mini:
-		mini="true"
-	else:
-		mini="false"
+	props.write("BirchProps.birchURL=file://"+args.installDir+"/public_html\n")	
+	props.write("BirchProps.adminEmail="+args.admin_email+"\n")	
+	props.write("BirchProps.platform="+args.platform+"\n")	
 
-	props.write("BirchProps.minibirch="+mini+"\n")	
+#BirchProps.BirchMasterCopy
+	props.write("BirchProps.birchHomeURL=file://"+args.installDir+"\n")	
 	props.flush()
 	props.close()
 	
-	if (not os.path.exists(ARGS.install_dir+"/local/admin/BIRCH.properties")):
-		print_console("Error, properties not written!")
+	if (not os.path.exists( os.path.join(args.installDir,"/local/admin/BIRCH.properties"))):
+		error("Error, properties not written!")
 	else:
-		print_console("Birch properties file written")
+		info("Birch properties file written")
 
 
-def showCustomDoc():
+def showCustomDoc(args):
 	htmlSuffix="/public_html/index.html"
 
 	if "winxp-32" in ARGS.platform:
 		#custom_html="/home/BIRCH"+htmlSuffix
 		#cygwin_exec("browser "+custom_html)
 	else:
-		custom_html=ARGS.install_dir+htmlSuffix
-		stream_exec("python -c \"import webbrowser; webbrowser.open(\\\""+custom_html+"\\\")\"")
+		custom_html= os.path.join(args.installDir,htmlSuffix)
+        import webbrowser
+        webbrowser.open(custom_html)
+		#stream_exec("python -c \"import webbrowser; webbrowser.open(\\\""+custom_html+"\\\")\"")
 
 
 
-def verify_install():
+def verify_install(args):
 		valid=False
 		
-		if (os.path.lexists(ARGS.install_dir+"/local")):
-			print_console("BIRCH/local found, install appears to be valid")
+		if (os.path.lexists(args.installDir+"/local")):
+			info("BIRCH/local found, install appears to be valid")
 			valid=True
 		
 		return valid

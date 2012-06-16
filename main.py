@@ -8,18 +8,19 @@ def main():
 
     args = getArgs(__file__)
 
+#	if "winxp-32" in ARGS.platform:
+#		print_console("This is a windows install")
+#		has_depends=True
+#	else:
+#		has_depends=check_depends()
+#	
+#	if (not has_depends):
+#		print_console("A required dependancy is not present on system path, BIRCH cannot be installed")
+#		shutdown()
+	
+
     if ( args != None ):
         pass
-#
-#
-#    except:
-#        
-#        err=traceback.format_exc()
-#        error(err)
-#
-#    finally:
-#        info("Installation finished")
-
 
 
 if __name__ == "__main__":
