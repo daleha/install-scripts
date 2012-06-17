@@ -1,5 +1,5 @@
 import os
-
+from log import *
 
 	
 def check_depends():
@@ -7,7 +7,7 @@ def check_depends():
 		#if the dependency is found, then this will evaluate to true, else, false
 		found= os.popen("which "+depend).read().strip() !=""
 		
-		print_console("Dependancy \""+depend+"\" found: "+str(found))
+		info("Dependancy \""+depend+"\" found: "+str(found))
 		if (not found):
 			return False
 		else:
@@ -19,7 +19,7 @@ def check_depends():
 	for each in dependancies:
 		foundall=check_depend(each)	
 		if (not foundall):
-			print_console("Dependancy " + each+ " not found on system path!")
+			error("Dependancy " + each+ " not found on system path!")
 			return False
 		
 	return foundall

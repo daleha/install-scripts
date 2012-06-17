@@ -22,6 +22,8 @@ def main():
     if ( args != None ):
         pass
 
+def getbirch_main():
+    pass
 
 if __name__ == "__main__":
     from lib import boot_strap 
