@@ -1,0 +1,414 @@
+package birchconfig;
+
+import java.io.*;
+import java.util.Date;
+//import birchconfig.runCommand;
+//import birchconfig.mv;
+
+/**
+ * <p>Title: Install a BIRCH system.</p>
+ * <p>Copyright: Copyright (c) 2005</p>
+ * <p>Company: University of Manitoba</p>
+ *
+ * <p>Description: This program calls external scripts to install a new BIRCH system
+ * or update an existing one. It can be run as a method from birchconfig.jar,
+ * or as a standalone commandline program</p>
+ *  <p>Logfile: $BIRCH/install-birch/install.log.
+ * <p>This program <b>must</b> be run from the $BIRCH/install-birch directory.</p>
+ * <p>To avoid accidently clobbering the master copy of BIRCH, this program will stop
+ * and print an error message if the userid of the person runing it is 'psgendb'.</p>
+ @param -new do a new BIRCH installation. This option will create a new $BIRCH/local
+ * directory by renaming 'local-generic' to 'local'. Without the -new switch,
+ * install will update the BIRCH site using settings in $BIRCH/local
+ *
+ *
+ *
+ * @author Dr. Brian Fristensky
+ * @version 0.1
+
+ */
+
+
+public class install {
+    public install() {
+        try {
+            jbInit();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    static runCommand runner = new runCommand();
+
+    //-----------------------------------------------
+    /**
+     * Write a message to the logfile.
+     */
+
+    static void progressMessage(BufferedTextOutputFile logfile, String S) {
+         logfile.PW.println(S);
+         }
+
+    //-----------------------------------------------
+    /** Run the nobirch script. This script deletes lines from .cshrc, .profile,
+    * .bashrc etc. which add BIRCH to the PATH and set environment variables
+    *needed for BIRCH
+    */
+    static boolean runNobirch(BufferedTextOutputFile logfile) {
+       boolean OKAY = true;
+       String COMMAND;
+
+       COMMAND = "../admin/nobirch -Q";
+       logfile.PW.print("nobirch: Temporarily removing BIRCH access for this account: ");
+       OKAY = runner.runCommand(COMMAND);
+
+       if (OKAY) {
+          logfile.PW.println("Succeeded");
+          }
+       else {
+            logfile.PW.println("FAILED!");
+            }
+       return OKAY;
+       }
+
+    //-----------------------------------------------
+    /** Run the script makelinks.csh. This script creates
+     *  symbolic links to directories in the master copy
+     *  of BIRCH, so that these directories do not need
+     *  to be duplicated for each mini-BIRCH instance.
+    */
+    static boolean makeLinks(String BirchMasterCopy, BufferedTextOutputFile logfile) {
+
+       boolean OKAY = true;
+       logfile.PW.print("Creating links to master copy of BIRCH");
+
+   System.out.println("Running makelinks.csh");
+
+       OKAY = runner.runCommand("./makelinks.csh " + BirchMasterCopy);
+       if (OKAY) {
+           logfile.PW.println("Succeeded");
+           }
+       else {
+           logfile.PW.println("FAILED!");
+            }
+      return OKAY;
+      }
+
+
+    //-----------------------------------------------
+    /** rename local-generic directory to local
+     *
+     */
+
+    static boolean makeLocal(String BIRCH, BufferedTextOutputFile logfile) {
+       boolean OKAY = true;
+       mv mover = new mv();
+       String oldname = BIRCH + "/local-generic";
+       String newname = BIRCH + "/local";
+       logfile.PW.print("Move " + oldname + " to " + newname);
+       try {
+           OKAY = mover.mv(oldname,newname);
+           }
+       catch (Exception e) {
+           OKAY = false;
+           logfile.PW.println(e);
+         }
+       if (OKAY) {
+          logfile.PW.println("Succeeded");
+       }
+       else {
+           logfile.PW.println("FAILED!");
+       }
+       return OKAY;
+       }
+
+       //-----------------------------------------------
+       /** Files added to local-generic since the previous release
+        * will be missing from local. Copy these files from local-generic to local
+       */
+       static boolean copyLocal(BufferedTextOutputFile logfile) {
+
+          boolean OKAY = true;
+          logfile.PW.print("Copying new files from local-generic to local");
+
+      System.out.println("Running update-local.sh");
+
+          OKAY = runner.runCommand("./update-local.sh ");
+          if (OKAY) {
+              logfile.PW.println("Succeeded");
+              }
+          else {
+              logfile.PW.println("FAILED!");
+               }
+         return OKAY;
+         }
+
+
+    //-----------------------------------------------
+    /** Run the script birchhome.csh. This script goes through
+    * configuration files in BIRCH and changes '/home/psgendb'
+    * to the local BIRCH home directory.
+    */
+    static boolean BirchHome(String BIRCH, BufferedTextOutputFile logfile) {
+
+        boolean OKAY = true;
+        logfile.PW.print("Set BIRCH homedirectory to " + BIRCH + ": ");
+
+System.out.println("Running birchhome.csh");
+
+         OKAY = runner.runCommand("./birchhome.csh");
+         if (OKAY) {
+             logfile.PW.println("Succeeded");
+             }
+         else {
+                logfile.PW.println("FAILED!");
+               }
+         return OKAY;
+         }
+
+
+    //-----------------------------------------------
+    /** Run the script setplatform.csh. This script uncomments
+    * the appropriate line in profile.source and platform.profile.source
+    * to set the enviroment variable BIRCH_PLATFORM
+    */
+    static boolean setPlatform(String platform, BufferedTextOutputFile logfile) {
+        boolean OKAY = true;
+        logfile.PW.print("setplatform.csh: Set default platform to " + platform + ": ");
+        String COMMAND = "./setplatform.csh " + platform;
+        OKAY = runner.runCommand(COMMAND);
+         if (OKAY) {
+             logfile.PW.println("Succeeded");
+             }
+         else {
+                logfile.PW.println("FAILED!");
+               }
+         return OKAY;
+         }
+
+    /**
+     * makeParamFile - create the file $birch/local/admin/newstr.param,
+     * which contains strings to be substituted for those in oldstr.param.
+     */
+    static void makeParamFile(BirchProperties tempBP, BufferedTextOutputFile logfile) {
+       BirchProperties BP = tempBP;
+       String FN = BP.homedir + "/local/admin/newstr.param";
+       BufferedTextOutputFile outfile = new BufferedTextOutputFile();
+       if (outfile.WriteOkay(FN)) {
+           logfile.PW.println("Create substitution strings for customdoc.py: ");
+           try {
+               String S;
+               S = "~";
+               outfile.PW.println(S);
+               S = "file://" + BP.homedir + "/public_html";
+               outfile.PW.println(S);
+               BP.birchURL = S;
+               S = "file://" + BP.homedir;
+               outfile.PW.println(S);
+               BP.birchHomeURL = S;
+               S = BP.adminEmail;
+               outfile.PW.println(S);
+               S = BP.homedir;
+               outfile.PW.println(S);
+               S = BP.adminUserid;
+               outfile.PW.println(S);
+               outfile.PW.flush();
+               outfile.FW.close();
+           }
+          catch (Exception e) {
+               System.out.println(e);
+          }
+       }
+    }
+
+    //-----------------------------------------------
+    /** Run the script customdoc.py. This script substitutes
+    * strings (eg. URLs, directory names, userid of BIRCH admin.,
+    * email address  of BIRCH admin.) in HTML documentation from
+    * the original  values to local values
+    */
+    static boolean customDoc(BufferedTextOutputFile logfile) {
+        boolean OKAY = true;
+        logfile.PW.print("customdoc.py: Changing HMTL documentation to correspond to local directory structure: ");
+        String COMMAND = "python ./customdoc.py oldstr.param newstr.param htmldir.param";
+        OKAY = runner.runCommand(COMMAND);
+
+         if (OKAY) {
+             logfile.PW.println("Succeeded");
+             }
+         else {
+                logfile.PW.println("FAILED!");
+               }
+         return OKAY;
+         }
+
+    //-----------------------------------------------
+    /** Run the script htmldoc.py. This script creates web pages
+    * organizing documentation by category, package, and an index.
+    */
+    static boolean htmlDoc(String BIRCH, BufferedTextOutputFile logfile) {
+        boolean OKAY = true;
+        logfile.PW.print("htmldoc.py: Creating web pages that index documentation for all programs: ");
+        String COMMAND =  "python ./htmldoc.py";
+        OKAY = runner.runCommand(COMMAND);
+
+         if (OKAY) {
+             logfile.PW.println("Succeeded");
+             }
+         else {
+                logfile.PW.println("FAILED!");
+               }
+         return OKAY;
+         }
+
+    //-----------------------------------------------
+    /** Run the script makemenus.py. This script creates .GDEmenus
+    * files for all platforms.
+    */
+    static boolean makemenus(String BIRCH, BufferedTextOutputFile logfile) {
+        boolean OKAY = true;
+
+        logfile.PW.print("makemenus.py: Creating GDE menus: ");
+        String COMMAND = "./runmakemenus.csh";
+        OKAY = runner.runCommand(COMMAND);
+
+         if (OKAY) {
+             logfile.PW.println("Succeeded");
+             }
+         else {
+                logfile.PW.println("FAILED!");
+               }
+         return OKAY;
+         }
+
+    //-----------------------------------------------
+    /** Run the script fasta2install.csh and fasta3install.csh.
+    * These scripts download the fasta2 and fasta3 packages by FTP
+    * compile the programs, and install programs and documentation.
+    */
+    static boolean makefasta(String BIRCH, BufferedTextOutputFile logfile) {
+        boolean OKAY = true;
+        String COMMAND;
+
+        COMMAND = "./installfasta2.csh";
+        logfile.PW.print("installfasta2.csh: Downloading and compiling fasta2 package: ");
+        OKAY = runner.runCommand(COMMAND);
+        logfile.PW.print("installfasta3.csh: Downloading and compiling fasta3 package: ");
+        COMMAND = "./installfasta3.csh";
+        OKAY = runner.runCommand(COMMAND);
+
+         if (OKAY) {
+             logfile.PW.println("Succeeded");
+             }
+         else {
+                logfile.PW.println("FAILED!");
+               }
+
+         return OKAY;
+         }
+
+     //-----------------------------------------------
+     /** Run the newuser script. This script adds lines to .cshrc, .profile,
+     * .bashrc etc. to add BIRCH to the PATH and set environment variables
+     * needed for BIRCH
+     */
+     static boolean runNewUser(BufferedTextOutputFile logfile) {
+     boolean OKAY = true;
+     String COMMAND;
+
+     COMMAND = "../admin/newuser";
+     logfile.PW.print("newuser: Setting up your account to use BIRCH ");
+     OKAY = runner.runCommand(COMMAND);
+
+     if (OKAY) {
+           logfile.PW.println("Succeeded");
+        }
+     else {
+           logfile.PW.println("FAILED!");
+          }
+           return OKAY;
+         }
+
+    //============================= MAIN =====================================
+    public static void main(String[] args) {
+       BufferedTextOutputFile logfile = new BufferedTextOutputFile();
+       boolean OKAY = true;
+
+       // read command line arguments
+       boolean newInstallation = false;
+       BirchProperties BP = new BirchProperties();
+       for (int i=0; i < args.length; i++) {
+           if (args[i].equals("-new")) {
+               newInstallation = true;
+               }
+          else {
+             BP.loadProps(args[i]);
+               }
+       }
+
+       // Install or update BIRCH
+       System.out.println("BirchProperties read. BIRCH home dir: " + BP.homedir);
+       if (logfile.WriteOkay("../birchconfig.install.log")) {
+          if (newInstallation) {
+             progressMessage(logfile,"New BIRCH Installation");
+             }
+          else {
+               progressMessage(logfile,"Updating BIRCH");
+               }
+          Date D = new Date();
+          String TimeStamp = D.toString();
+          progressMessage(logfile,TimeStamp);
+          progressMessage(logfile,"");
+          }
+
+       // For testing purposes, we allow psgendb to get as far as this
+       // point. Since psgendb is the the userid for the master BIRCH
+       // site, we don't want to accidently clobber the master copy of
+       // BIRCH!
+       String userid = System.getProperty("user.name");
+       if (userid.equals("psgendb")) {
+          progressMessage(logfile,"UPDATE ABORTED! - psgendb can't run install");
+          System.out.println("UPDATE ABORTED! - psgendb can't run install");
+          }
+       else {
+            // for update, temporarily remove BIRCH access for this account.
+            if  ( ! newInstallation) {runNobirch(logfile);}
+
+            // create links to master copy of BIRCH
+            if (BP.minibirch.equals("true")) {makeLinks(BP.BirchMasterCopy,logfile);}
+
+            // move local-generic to local
+            if (newInstallation)
+               {makeLocal(BP.homedir,logfile);}
+            else
+               {copyLocal(logfile);}
+
+            // run birchhome.csh
+            BirchHome(BP.homedir, logfile);
+
+            // set BIRCH_PLATFORM in platform.source and platform.profile.source
+            if (newInstallation) {setPlatform(BP.platform, logfile);}
+
+            // run customdoc.py
+            if (newInstallation) {makeParamFile(BP, logfile);}
+            customDoc(logfile);
+
+            // run htmldoc.py
+            htmlDoc(BP.homedir, logfile);
+
+            // generate GDE menu files
+            makemenus(BP.homedir, logfile);
+
+            // install FASTA packages
+            if (BP.minibirch.equals("false")) {makefasta(BP.homedir, logfile);}
+
+            // set up .rc files so that BIRCH Administrator cn use BIRCH
+            runNewUser(logfile);
+       }
+
+    logfile.PW.close();
+    } // MAIN
+
+    private void jbInit() throws Exception {
+    }
+}

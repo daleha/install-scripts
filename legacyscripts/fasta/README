@@ -1,0 +1,11 @@
+This directory is used for downloading and installing the fasta2 and 
+fasta3 packages.
+
+
+Note: On the Univ. of Manitoba system, make sure to build the solaris-amd64
+binaries on mira. If you build on toliman, it has a different set
+of libraries and that won't run on merak or mira. So presumably, the
+libraries on mira are the "lowest common denominator". 
+
+
+

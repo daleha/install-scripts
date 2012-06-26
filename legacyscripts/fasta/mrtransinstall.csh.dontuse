@@ -1,0 +1,54 @@
+#!/bin/csh 
+# mrtransinstall.csh 2/12/03
+
+
+#------------- Set environment variables
+#Check to see if $MAILID is set
+if (${?MAILID} == 0) then
+  echo Environment variable MAILID must be set to your full Internet address
+  echo in the form     userid@hostname
+  echo This is best done in your .cshrc file.
+  exit
+endif
+set RM = 'rm -f'
+
+
+set HOST = ftp.virginia.edu
+set DIR = pub/fasta/other
+set USERID = anonymous
+set PASSWD = $MAILID
+set SHARFILE = mrtrans.shar
+
+mkdir mrtrans
+cd mrtrans
+
+# ------------ Download archive file by FTP
+# 
+  # generate FTP command file
+  echo user $USERID $PASSWD > ftp.input
+  echo cd $DIR >>  ftp.input
+  echo bin >> ftp.input
+  echo get $SHARFILE  >>  ftp.input
+  echo bye >> ftp.input
+  # run FTP
+  nice ftp -i -n $HOST < ftp.input
+  
+
+sh $SHARFILE
+chmod a+r *
+
+# -------------  Binary files
+
+make
+
+set BINFILES = ( mrtrans )
+chmod a+rx $BINFILES
+
+cp -p $BINFILES $BIRCH/$BIRCH_BIN
+
+# -------------- Manual pages
+cp -p *.1 $BIRCH/manl
+man -M $BIRCH mrtrans > $doc/fasta/mrtrans.txt
+chmod a+r $doc/fasta/mrtrans.txt
+
+

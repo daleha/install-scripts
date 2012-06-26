@@ -1,0 +1,559 @@
+package birchconfig;
+
+import java.awt.BorderLayout;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.lang.System;
+import java.io.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+
+/**
+ * <p>Title: BIRCH Administration Tool</p>
+ *
+ * <p>Description: GUI for new BIRCH installation</p>
+ *
+ * <p>Copyright: Copyright (c) 2005</p>
+ *
+ * <p>Company: University of Manitoba</p>
+ *
+ * @author Dr. Brian Fristensky
+ * @version 0.1
+ */
+public class InstallFrame extends JFrame {
+    JLabel InstallFrameTitle = new JLabel();
+    TitledBorder titledBorder1 = new TitledBorder("");
+    JPanel TitlePane = new JPanel();
+    JPanel HomedirPane = new JPanel();
+    JLabel dirLabel = new JLabel();
+    JTextField dirTextField = new JTextField();
+    JButton dirButton = new JButton();
+    JPanel MasterDirPane = new JPanel();
+    JLabel MasterDirLabel1 = new JLabel();
+    JLabel MasterDirLabel2 = new JLabel();
+    JTextField MasterDirTextField = new JTextField();
+    JButton MasterDirButton = new JButton();
+    JPanel UseridPane = new JPanel();
+    JLabel adminUseridLabel = new JLabel();
+    JTextField adminUseridTextField = new JTextField();
+    JPanel EmailPane = new JPanel();
+    JLabel adminEmailLabel = new JLabel();
+    JTextField adminEmailTextField = new JTextField();
+    JPanel PlatformPane = new JPanel();
+    JLabel platformLabel = new JLabel();
+    JComboBox platformComboBox = new JComboBox();
+    JPanel ButtonPane = new JPanel();
+    JButton ReturnButton = new JButton();
+    JButton HelpButton = new JButton();
+    JButton beginButton = new JButton();
+    MainFrame frame;
+    //VerticalFlowLayout verticalFlowLayout1 = new VerticalFlowLayout();
+    LayoutManager gridLayout1 = new GridLayout(); // Title
+    LayoutManager gridBagLayout7 = new GridBagLayout(); // Master
+    LayoutManager gridBagLayout2 = new GridBagLayout(); // Userid
+    LayoutManager gridBagLayout3 = new GridBagLayout(); // Email
+    LayoutManager gridBagLayout4 = new GridBagLayout(); // Platform
+    LayoutManager gridBagLayout5 = new GridBagLayout(); // Button
+
+
+    BirchProperties BP;
+    GridBagLayout gridBagLayout1 = new GridBagLayout();
+
+    static runCommand runner = new runCommand();
+
+    // -----------------------------  CONSTRUCTOR
+    public InstallFrame(MainFrame tempframe, BirchProperties tempBP) {
+        try {
+            BP = tempBP;
+            frame = tempframe;
+            jbInit(frame, BP);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+
+    private void jbInit(MainFrame frame, BirchProperties BP) throws Exception {
+        BP.GuessProps();
+        if (BP.minibirch.equals("true")) {
+            setSize(new Dimension(551, 426));
+        }
+        else {
+            setSize(new Dimension(551, 376));
+            }
+        setTitle("birchconfig");
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
+	this.getContentPane().setBackground(Color.orange);
+	// Title
+        InstallFrameTitle.setBackground(Color.white);
+        InstallFrameTitle.setFont(new java.awt.Font(
+                "Monotype Century Schoolbook", Font.BOLD, 20));
+        InstallFrameTitle.setBorder(BorderFactory.createEtchedBorder());
+        InstallFrameTitle.setOpaque(true);
+        InstallFrameTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        InstallFrameTitle.setHorizontalTextPosition(SwingConstants.TRAILING);
+        InstallFrameTitle.setText("New BIRCH Installation");
+        TitlePane.setBorder(BorderFactory.createEtchedBorder());
+        TitlePane.setLayout(gridLayout1);
+	// Home Directory
+        dirLabel.setFont(new java.awt.Font("SansSerif", Font.PLAIN, 12));
+        dirLabel.setText("BIRCH Home Directory");
+        dirTextField.setBackground(Color.white);
+        dirTextField.setText("");
+	dirTextField.setText(BP.homedir);
+	dirTextField.addActionListener(new
+                         InstallFrame_dirTextField_actionAdapter(this));
+        dirButton.setFont(new java.awt.Font("Dialog", Font.PLAIN, 10));
+        dirButton.setText("Choose");
+        dirButton.addActionListener(new InstallFrame_dirButton_actionAdapter(this));
+        HomedirPane.setBackground(Color.orange);
+        HomedirPane.setOpaque(false);
+        HomedirPane.setLayout(gridBagLayout1);
+        // miniBirch Master Directory
+        MasterDirPane.setLayout(gridBagLayout1);
+        MasterDirTextField.setBackground(Color.white);
+        MasterDirTextField.setText("");
+	MasterDirTextField.addActionListener(new
+                                      InstallFrame_MasterDirTextField_actionAdapter(this));
+        MasterDirButton.setFont(new java.awt.Font("Dialog", Font.PLAIN, 10));
+        MasterDirButton.setText("Choose");
+        MasterDirButton.addActionListener(new InstallFrame_MasterDirButton_actionAdapter(this));
+        MasterDirPane.setBackground(Color.orange);
+        MasterDirPane.setMinimumSize(new Dimension(303, 56));
+        MasterDirPane.setOpaque(false);
+        MasterDirPane.setPreferredSize(new Dimension(505, 56));
+	MasterDirLabel1.setFont(new java.awt.Font("SansSerif", Font.PLAIN, 12));
+        MasterDirLabel1.setText("miniBIRCH");
+        MasterDirLabel2.setFont(new java.awt.Font("SansSerif", Font.PLAIN, 12));
+        MasterDirLabel2.setText("Master Directory");
+	MasterDirTextField.setText("");
+	// userid of BIRCH administrator
+        adminUseridLabel.setFont(new java.awt.Font("SansSerif", Font.PLAIN, 12));
+        adminUseridLabel.setText("Userid of BIRCH Administrator");
+        UseridPane.setLayout(gridBagLayout2);
+        adminUseridTextField.setBackground(Color.white);
+        adminUseridTextField.setText("");
+	adminUseridTextField.setText(BP.adminUserid);
+	UseridPane.setOpaque(false);
+	// email address of BIRCH administratior
+        adminEmailLabel.setFont(new java.awt.Font("SansSerif", Font.PLAIN, 12));
+        adminEmailLabel.setText("Email address of BIRCH Administrator");
+        adminEmailTextField.setBackground(Color.white);
+        adminEmailTextField.setText("");
+        adminEmailTextField.addActionListener(new
+                                      InstallFrame_adminEmailTextField_actionAdapter(this));
+        EmailPane.setLayout(gridBagLayout3);
+        EmailPane.setOpaque(false);
+
+	// default platform
+        platformLabel.setFont(new java.awt.Font("SansSerif", Font.PLAIN, 12));
+        platformLabel.setText("Default platform (choose one)");
+        PlatformPane.setLayout(gridBagLayout4);
+        platformComboBox.addItem("solaris-sparc");
+        platformComboBox.addItem("solaris-amd64");
+        platformComboBox.addItem("linux-intel");
+        platformComboBox.addItem("linux-x86_64");
+        platformComboBox.addItem("osx-x86_64");
+        platformComboBox.addItem("winxp-32");
+        platformComboBox.addItem("win7-64");
+        platformComboBox.setSelectedIndex(0);
+        platformComboBox.addActionListener(new
+              InstallFrame_platformComboBox_actionAdapter(this));
+	if (BP.platform == "solaris-sparc" ) {
+            platformComboBox.setSelectedIndex(0);
+        }
+        else if (BP.platform == "solaris-amd64" ) {
+            platformComboBox.setSelectedIndex(1);
+        }
+        else if (BP.platform == "linux-intel" ) {
+             platformComboBox.setSelectedIndex(2);
+        }
+        else if (BP.platform == "linux-x86_64" ) {
+             platformComboBox.setSelectedIndex(3);
+        }
+        else if (BP.platform == "osx-x86_64" ) {
+             platformComboBox.setSelectedIndex(4);
+        }
+        else if (BP.platform == "winxp-32" ) {
+             platformComboBox.setSelectedIndex(5);
+        }
+        else if (BP.platform == "win7-64" ) {
+             platformComboBox.setSelectedIndex(6);
+        }                
+        else {
+            platformComboBox.setSelectedIndex(2);
+        }
+        PlatformPane.setOpaque(false);
+
+	// Button pane
+        ButtonPane.setLayout(gridBagLayout5);
+        ReturnButton.setText("Return to main menu");
+        ReturnButton.addActionListener(new InstallFrame_ReturnButton_actionAdapter(this));
+        HelpButton.setText("Help");
+        HelpButton.addActionListener(new InstallFrame_HelpButton_actionAdapter(this));
+        beginButton.setText("Begin BIRCH Installation");
+        beginButton.addItemListener(new InstallFrame_beginButton_itemAdapter(this));
+        beginButton.addActionListener(new InstallFrame_beginButton_actionAdapter(this));
+        ButtonPane.setOpaque(false);
+
+        // Main frame
+
+	// Title pane
+
+        TitlePane.add(InstallFrameTitle,
+                      new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0
+                                             , GridBagConstraints.WEST,
+                                             GridBagConstraints.NONE,
+                                             new Insets(0, 0, 0, 0), 251, 0));
+
+	// userid pane
+
+        UseridPane.add(adminUseridTextField, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0
+                , GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+                new Insets(11, 81, 8, 19), 171, 10));
+        UseridPane.add(adminUseridLabel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0
+                , GridBagConstraints.SOUTHWEST, GridBagConstraints.NONE,
+                new Insets(1, 9, 14, 0), 0, 0));
+
+	// email pane
+
+        EmailPane.add(adminEmailTextField, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0
+                , GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+                new Insets(15, 11, 7, 18), 223, 10));
+        EmailPane.add(adminEmailLabel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0
+                , GridBagConstraints.WEST, GridBagConstraints.NONE,
+                new Insets(22, 10, 14, 0), 28, 0));
+
+	// platform pane
+
+        PlatformPane.add(platformComboBox, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0
+                , GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL,
+                new Insets(11, 18, 15, 23), 199, 2));
+        PlatformPane.add(platformLabel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0
+                , GridBagConstraints.WEST, GridBagConstraints.NONE,
+                new Insets(20, 12, 15, 0), 69, 0));
+        // button pane
+
+        ButtonPane.add(ReturnButton, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0
+                , GridBagConstraints.CENTER, GridBagConstraints.NONE,
+                new Insets(12, 15, 13, 0), 0, 0));
+        ButtonPane.add(beginButton, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0
+                , GridBagConstraints.CENTER, GridBagConstraints.NONE,
+                new Insets(12, 16, 13, 0), 0, 0));
+        ButtonPane.add(HelpButton, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0
+                , GridBagConstraints.CENTER, GridBagConstraints.NONE,
+                new Insets(12, 18, 13, 69), 0, 0));
+
+
+        HomedirPane.add(dirLabel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0
+                , GridBagConstraints.WEST, GridBagConstraints.NONE,
+                new Insets(15, 8, 6, 0), 0, 0));
+        HomedirPane.add(dirTextField,
+                        new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0
+                                               , GridBagConstraints.WEST,
+                                               GridBagConstraints.HORIZONTAL,
+                                               new Insets(3, 5, 0, 0), 0, 5));
+        HomedirPane.add(dirButton, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0
+                , GridBagConstraints.CENTER, GridBagConstraints.NONE,
+                new Insets(3, 6, 0, 0), 0, 0));
+
+
+        MasterDirPane.add(MasterDirButton,
+                          new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0
+                                                 , GridBagConstraints.CENTER,
+                                                 GridBagConstraints.NONE,
+                                                 new Insets(0, 6, 0, 0), 0, 0));
+        MasterDirPane.add(MasterDirTextField,
+                          new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0
+                                                 , GridBagConstraints.WEST,
+                                                 GridBagConstraints.HORIZONTAL,
+                                                 new Insets(0, 26, 9, 0), 0, 5));
+        MasterDirPane.add(MasterDirLabel2,
+                          new GridBagConstraints(0, 0, 1,
+                                                 GridBagConstraints.REMAINDER,
+                                                 0.0, 0.0
+                                                 , GridBagConstraints.WEST,
+                                                 GridBagConstraints.NONE,
+                                                 new Insets(20, 8, 0, 15), 0, 0));
+        MasterDirPane.add(MasterDirLabel1,
+                          new GridBagConstraints(0, 0, 1,
+                                                 GridBagConstraints.REMAINDER,
+                                                 0.0, 0.0
+                                                 , GridBagConstraints.WEST,
+                                                 GridBagConstraints.NONE,
+                                                 new Insets(0, 8, 10, 15), 0, 0));
+        frame.getContentPane().setLayout(null);
+        this.getContentPane().add(TitlePane, null);
+        this.getContentPane().add(HomedirPane, null);
+        if (BP.minibirch.equals("true")) {
+            this.getContentPane().add(MasterDirPane, null);
+        }
+        this.getContentPane().add(UseridPane, null);
+        this.getContentPane().add(EmailPane, null);
+        this.getContentPane().add(PlatformPane, null);
+        this.getContentPane().add(ButtonPane, null);
+    }
+
+    // -------------------------  MAIN
+    public static void main(String[] args) {
+//        InstallFrame installframe = new InstallFrame(BP);
+
+    }
+
+
+// ---------------------------  ACTIONS
+    public void jFileChooser1_actionPerformed(ActionEvent e) {
+
+
+    }
+
+    // Begin BIRCH Installation
+    public void beginButton_actionPerformed(ActionEvent e) {
+       boolean OKAY = true;
+       // Check the values of the variables set in the window.
+       // Set final values from window to BP.
+       String S = dirTextField.getText();
+       File F = new File(S);
+
+       if (F.isDirectory()) {
+          BP.homedir = S;
+      }
+      else {
+          OKAY = false;
+          Toolkit.getDefaultToolkit().beep();
+          String message = S + " does not exist or is not a directory";
+          JOptionPane.showMessageDialog(frame, message) ;
+          }
+
+      // I can't think of a good way to check the other parameters, so far.
+      if (OKAY) {
+          BP.adminUserid = adminUseridTextField.getText();
+          BP.adminEmail = adminEmailTextField.getText();
+          BP.platform = (String) platformComboBox.getSelectedItem();
+
+          // Write BP to BIRCH Properties file
+          String propFN = BP.homedir + "/local-generic/admin/BIRCH.properties";
+          BP.writeProps(propFN);
+
+          // Do the installation using the BIRCH properties file
+          // as input.
+          //
+          String [] propargs = new String[] {"-new",propFN};
+          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+          OKAY = install.main(propargs);
+          setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+          Toolkit.getDefaultToolkit().beep();
+          String message = "";
+          if (OKAY) {
+              message = "BIRCH installation complete. \n" +
+                        "Be sure to bookmark your customized documentation, which " +
+                        "will appear in your web browser.";
+              JOptionPane.showMessageDialog(frame, message) ;
+              // Note: In order to run this command in the background, we must begin
+              // the command string with /bin/csh. This forces the command to be
+              // executed by the shell. Otherwise, the JVM executes the command
+              // directly, bypassing the shell. I'll bet you didn't know that,
+              // did you?
+              String COMMAND = new String( "/bin/csh ../script/browser.failsafe.csh " + BP.homedir + "/public_html/index.html &");
+              OKAY = runner.runCommand(COMMAND);
+          }
+          else {
+              message = ">>> BIRCH installation failed. See birchconfig.screen.";
+              JOptionPane.showMessageDialog(frame, message) ;
+          }
+
+          System.exit(0);
+      }
+
+    }
+
+    public void MasterDirTextField_actionPerformed(ActionEvent e) {
+
+    }
+
+    public void platformComboBox_actionPerformed(ActionEvent e) {
+
+    }
+
+    public void dirTextField_actionPerformed(ActionEvent e) {
+
+    }
+
+    // Return to Main Menu
+    public void ReturnButton_actionPerformed(ActionEvent e) {
+       this.dispose();
+       frame.setVisible(true);
+    }
+
+    public void dirButton_actionPerformed(ActionEvent e) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int returnVal = chooser.showDialog(InstallFrame.this,"Choose BIRCH Directory");
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            BP.homedir = chooser.getSelectedFile().getPath();
+            dirTextField.setText(BP.homedir);
+             }
+    }
+
+    public void MasterDirButton_actionPerformed(ActionEvent e) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int returnVal = chooser.showDialog(InstallFrame.this,"Choose Directory with Master copy of BIRCH");
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            BP.BirchMasterCopy = chooser.getSelectedFile().getPath();
+            MasterDirTextField.setText(BP.BirchMasterCopy);
+             }
+    }
+
+    public void adminEmailTextField_actionPerformed(ActionEvent e) {
+
+    }
+
+    public void beginButton_itemStateChanged(ItemEvent e) {
+
+    }
+
+    public void HelpButton_actionPerformed(ActionEvent e) {
+           helpFrame Help = new helpFrame("birchconfig/help/newInstall.help.html");
+           Help.setVisible(true);
+    }
+}
+
+
+class InstallFrame_HelpButton_actionAdapter implements ActionListener {
+    private InstallFrame adaptee;
+    InstallFrame_HelpButton_actionAdapter(InstallFrame adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        adaptee.HelpButton_actionPerformed(e);
+    }
+}
+
+
+class InstallFrame_adminEmailTextField_actionAdapter implements ActionListener {
+    private InstallFrame adaptee;
+    InstallFrame_adminEmailTextField_actionAdapter(InstallFrame adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        adaptee.adminEmailTextField_actionPerformed(e);
+    }
+}
+
+
+class InstallFrame_dirButton_actionAdapter implements ActionListener {
+    private InstallFrame adaptee;
+    InstallFrame_dirButton_actionAdapter(InstallFrame adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+
+        adaptee.dirButton_actionPerformed(e);
+    }
+}
+
+
+class InstallFrame_ReturnButton_actionAdapter implements ActionListener {
+    private InstallFrame adaptee;
+    InstallFrame_ReturnButton_actionAdapter(InstallFrame adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        adaptee.ReturnButton_actionPerformed(e);
+    }
+}
+
+
+class InstallFrame_dirTextField_actionAdapter implements ActionListener {
+    private InstallFrame adaptee;
+    InstallFrame_dirTextField_actionAdapter(InstallFrame adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        adaptee.dirTextField_actionPerformed(e);
+    }
+}
+
+class InstallFrame_MasterDirButton_actionAdapter implements ActionListener {
+    private InstallFrame adaptee;
+    InstallFrame_MasterDirButton_actionAdapter(InstallFrame adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+
+        adaptee.MasterDirButton_actionPerformed(e);
+    }
+}
+
+class InstallFrame_MasterDirTextField_actionAdapter implements ActionListener {
+    private InstallFrame adaptee;
+    InstallFrame_MasterDirTextField_actionAdapter(InstallFrame adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+
+        adaptee.MasterDirTextField_actionPerformed(e);
+    }
+}
+class InstallFrame_platformComboBox_actionAdapter implements ActionListener {
+    private InstallFrame adaptee;
+    InstallFrame_platformComboBox_actionAdapter(InstallFrame adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+
+        adaptee.platformComboBox_actionPerformed(e);
+    }
+}
+
+
+class InstallFrame_beginButton_actionAdapter implements ActionListener {
+    private InstallFrame adaptee;
+    InstallFrame_beginButton_actionAdapter(InstallFrame adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        adaptee.beginButton_actionPerformed(e);
+    }
+}
+
+
+class InstallFrame_beginButton_itemAdapter implements ItemListener {
+    private InstallFrame adaptee;
+    InstallFrame_beginButton_itemAdapter(InstallFrame adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void itemStateChanged(ItemEvent e) {
+        adaptee.beginButton_itemStateChanged(e);
+    }
+}
+
+
+class InstallFrame_jFileChooser1_actionAdapter implements ActionListener {
+    private InstallFrame adaptee;
+    InstallFrame_jFileChooser1_actionAdapter(InstallFrame adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        adaptee.jFileChooser1_actionPerformed(e);
+    }
+}

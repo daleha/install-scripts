@@ -1,0 +1,8 @@
+This directory will eventually replace the install-birch directory.
+
+The existing shell scripts will be replaced by Python scripts used
+by Getbirch. Getbirch will eventually call scripts from this directory
+during an install.
+
+This directory is not used by the production version of BIRCH, 
+and can be safely deleted, at present.
